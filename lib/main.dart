@@ -29,9 +29,6 @@ class ChessBoardScreen extends StatefulWidget {
 }
 
 class _ChessBoardScreenState extends State<ChessBoardScreen> {
-  // Размер доски — фиксированный, а не от ширины окна
-  static const double _boardSize = 560.0;
-
   // Текущее состояние партии
   Position _position = Chess.initial;
   Side _orientation = Side.white;
@@ -43,7 +40,7 @@ class _ChessBoardScreenState extends State<ChessBoardScreen> {
   @override
   void initState() {
     super.initState();
-    // Исправление 1: передаём обязательный параметр game
+    // Передаём обязательный параметр game с начальной позицией
     _controller = ChessboardController(game: _buildGameData());
   }
 
@@ -67,7 +64,6 @@ class _ChessBoardScreenState extends State<ChessBoardScreen> {
   }
 
   // Обработка хода, сделанного пользователем
-  // Исправление 2: параметр называется viaDragAndDrop, а не isDrop
   void _onMove(Move move, {bool? viaDragAndDrop}) {
     setState(() {
       _position = _position.playUnchecked(move);
@@ -96,15 +92,27 @@ class _ChessBoardScreenState extends State<ChessBoardScreen> {
           ),
         ],
       ),
-      body: Center(
-        child: SizedBox(
-          width: _boardSize,
-          height: _boardSize,
-          child: Chessboard(
-            controller: _controller,
-            size: _boardSize,
-            orientation: _orientation,
-            onMove: _onMove,
+      body: SafeArea(
+        child: Center(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Берём минимальную сторону доступного пространства
+              // и отнимаем немного места на отступы
+              final available = constraints.biggest.shortestSide - 24;
+              // Ограничиваем разумными рамками
+              final boardSize = available.clamp(240.0, 640.0);
+
+              return SizedBox(
+                width: boardSize,
+                height: boardSize,
+                child: Chessboard(
+                  controller: _controller,
+                  size: boardSize,
+                  orientation: _orientation,
+                  onMove: _onMove,
+                ),
+              );
+            },
           ),
         ),
       ),
