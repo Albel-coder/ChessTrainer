@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Chess Board Demo',
+      title: 'Chess Trainer',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
       ),
@@ -29,19 +29,22 @@ class ChessBoardScreen extends StatefulWidget {
 }
 
 class _ChessBoardScreenState extends State<ChessBoardScreen> {
+  // Размер доски — фиксированный, а не от ширины окна
+  static const double _boardSize = 560.0;
+
+  // Текущее состояние партии
+  Position _position = Chess.initial;
+  Side _orientation = Side.white;
+  NormalMove? _lastMove;
+
   // Контроллер, который управляет доской
   late final ChessboardController _controller;
-  // Текущая позиция
-  Position position = Chess.initial;
-  // Последний сделанный ход (для подсветки)
-  NormalMove? lastMove;
-  // Ориентация доски
-  Side orientation = Side.white;
 
   @override
   void initState() {
     super.initState();
-    _controller = ChessboardController(game: _buildGame());
+    // Исправление 1: передаём обязательный параметр game
+    _controller = ChessboardController(game: _buildGameData());
   }
 
   @override
@@ -50,25 +53,28 @@ class _ChessBoardScreenState extends State<ChessBoardScreen> {
     super.dispose();
   }
 
-  // Создаём GameData из текущего состояния
-  GameData _buildGame() => GameData(
-    fen: position.fen,
-    lastMove: lastMove,
-    playerSide: PlayerSide.white,
-    sideToMove: position.turn,
-    kingSquareInCheck:
-    position.isCheck ? position.board.kingOf(position.turn) : null,
-    validMoves: makeLegalMoves(position),
-  );
+  // Собираем снимок состояния для chessground
+  GameData _buildGameData() {
+    return GameData(
+      fen: _position.fen,
+      lastMove: _lastMove,
+      playerSide: PlayerSide.both,
+      sideToMove: _position.turn,
+      validMoves: makeLegalMoves(_position),
+      kingSquareInCheck:
+      _position.isCheck ? _position.board.kingOf(_position.turn) : null,
+    );
+  }
 
-  // Колбэк при перемещении фигуры
+  // Обработка хода, сделанного пользователем
+  // Исправление 2: параметр называется viaDragAndDrop, а не isDrop
   void _onMove(Move move, {bool? viaDragAndDrop}) {
-    // Применяем ход к позиции
-    position = position.playUnchecked(move);
-    // Обновляем подсветку последнего хода
-    lastMove = move is NormalMove ? move : null;
-    // Сообщаем контроллеру о новой позиции
-    _controller.updatePosition(_buildGame());
+    setState(() {
+      _position = _position.playUnchecked(move);
+      _lastMove = move is NormalMove ? move : null;
+    });
+    // Обновляем доску новой позицией
+    _controller.updatePosition(_buildGameData());
   }
 
   @override
@@ -79,21 +85,25 @@ class _ChessBoardScreenState extends State<ChessBoardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.flip),
+            tooltip: 'Перевернуть доску',
             onPressed: () {
               setState(() {
-                orientation = orientation == Side.white ? Side.black : Side.white;
+                _orientation = _orientation == Side.white
+                    ? Side.black
+                    : Side.white;
               });
             },
           ),
         ],
       ),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+        child: SizedBox(
+          width: _boardSize,
+          height: _boardSize,
           child: Chessboard(
             controller: _controller,
-            size: MediaQuery.of(context).size.width - 32,
-            orientation: orientation,
+            size: _boardSize,
+            orientation: _orientation,
             onMove: _onMove,
           ),
         ),
