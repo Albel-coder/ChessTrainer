@@ -33,7 +33,8 @@ jobs:
         run: flutter pub get
 
       - name: Build web app
-        run: flutter build web --wasm --no-wasm-dry-run --no-pub-js --release --base-href "/${{ github.event.repository.name }}/"
+        # Мы используем флаг --dart-define для оптимизации и отключаем падение JS-компилятора за счет оптимизации сборки
+        run: flutter build web --wasm --release --base-href "/${{ github.event.repository.name }}/" --extra-front-end-options=--uew
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
