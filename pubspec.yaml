@@ -13,9 +13,7 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
-  chessground: ^10.3.0
-  dartchess: ^0.14.0
-  web: ^0.5.1
+  flutter_chess_board: ^1.0.1  # <--- Кроссплатформенная доска с анимациями и Web-поддержкой
 
 dev_dependencies:
   flutter_test:

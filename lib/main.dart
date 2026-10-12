@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:chessground/chessground.dart';
-
-// Условный импорт: прячем 64-битные числа от JavaScript-компилятора
-import 'package:dartchess/dartchess.dart'
-if (dart.library.js) 'dartchess_web_stub.dart';
-
+import 'package:flutter_chess_board/flutter_chess_board.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,8 +12,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Chess Trainer',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+        useMaterial3: true,
       ),
       home: const ChessBoardScreen(),
     );
@@ -33,64 +30,25 @@ class ChessBoardScreen extends StatefulWidget {
 }
 
 class _ChessBoardScreenState extends State<ChessBoardScreen> {
-  // Текущее состояние партии
-  Position _position = Chess.initial;
-  Side _orientation = Side.white;
-  NormalMove? _lastMove;
-
-  // Контроллер, который управляет доской
-  late final ChessboardController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    // Передаём обязательный параметр game с начальной позицией
-    _controller = ChessboardController(game: _buildGameData());
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  // Собираем снимок состояния для chessground
-  GameData _buildGameData() {
-    return GameData(
-      fen: _position.fen,
-      lastMove: _lastMove,
-      playerSide: PlayerSide.both,
-      sideToMove: _position.turn,
-      validMoves: makeLegalMoves(_position),
-      kingSquareInCheck:
-      _position.isCheck ? _position.board.kingOf(_position.turn) : null,
-    );
-  }
-
-  // Обработка хода, сделанного пользователем
-  void _onMove(Move move, {bool? viaDragAndDrop}) {
-    setState(() {
-      _position = _position.playUnchecked(move);
-      _lastMove = move is NormalMove ? move : null;
-    });
-    // Обновляем доску новой позицией
-    _controller.updatePosition(_buildGameData());
-  }
+  // Контроллер управляет состоянием, логикой и валидацией ходов из коробки
+  final ChessBoardController _controller = ChessBoardController();
+  PlayerColor _boardOrientation = PlayerColor.white;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Шахматная доска'),
+        title: const Text('Шахматная доска (Web Ready)'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.flip),
             tooltip: 'Перевернуть доску',
             onPressed: () {
               setState(() {
-                _orientation = _orientation == Side.white
-                    ? Side.black
-                    : Side.white;
+                _boardOrientation = _boardOrientation == PlayerColor.white
+                    ? PlayerColor.black
+                    : PlayerColor.white;
               });
             },
           ),
@@ -100,21 +58,34 @@ class _ChessBoardScreenState extends State<ChessBoardScreen> {
         child: Center(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              // Берём минимальную сторону доступного пространства
-              // и отнимаем немного места на отступы
               final available = constraints.biggest.shortestSide - 24;
-              // Ограничиваем разумными рамками
               final boardSize = available.clamp(240.0, 640.0);
 
-              return SizedBox(
-                width: boardSize,
-                height: boardSize,
-                child: Chessboard(
-                  controller: _controller,
-                  size: boardSize,
-                  orientation: _orientation,
-                  onMove: _onMove,
-                ),
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: boardSize,
+                    height: boardSize,
+                    child: ChessBoard(
+                      controller: _controller,
+                      boardColor: BoardColor.brown, // Красивая классическая тема доски
+                      boardOrientation: _boardOrientation,
+                      arrows: const [], // Здесь можно будет рисовать тренировочные стрелки дебютов
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Пример подписи хода (интеграция с логикой движка)
+                  ValueListenableBuilder<Chess>(
+                    valueListenable: _controller,
+                    builder: (context, game, child) {
+                      return Text(
+                        game.in_check ? 'Шах!' : 'Сделайте ход...',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      );
+                    },
+                  ),
+                ],
               );
             },
           ),
