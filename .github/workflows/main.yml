@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -33,7 +33,7 @@ jobs:
         run: flutter pub get
 
       - name: Build web app
-        run: flutter build web --wasm --no-wasm-dry-run --release --base-href "/${{ github.event.repository.name }}/"
+        run: flutter build web --wasm --no-wasm-dry-run --no-pub-js --release --base-href "/${{ github.event.repository.name }}/"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
