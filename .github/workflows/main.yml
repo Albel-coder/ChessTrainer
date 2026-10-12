@@ -33,7 +33,7 @@ jobs:
         run: flutter pub get
 
       - name: Build web app
-        run: flutter build web --wasm --no-pub --release --web-renderer canvaskit --base-href "/${{ github.event.repository.name }}/"
+        run: flutter build web --wasm --no-pub --release --base-href "/${{ github.event.repository.name }}/"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:chessground/chessground.dart';
-import 'package:dartchess/dartchess.dart';
+
+// Условный импорт: прячем 64-битные числа от JavaScript-компилятора
+import 'package:dartchess/dartchess.dart'
+if (dart.library.js) 'dartchess_web_stub.dart';
+
 
 void main() {
   runApp(const MyApp());
