@@ -14,6 +14,7 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   flutter_chess_board: ^1.0.1  # <--- Кроссплатформенная доска с анимациями и Web-поддержкой
+  file_picker: ^8.1.2
 
 dev_dependencies:
   flutter_test:
